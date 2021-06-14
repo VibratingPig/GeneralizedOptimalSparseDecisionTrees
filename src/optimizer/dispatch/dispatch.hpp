@@ -51,8 +51,6 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
             if (vertex -> second.uncertainty() == 0 || vertex -> second.lowerbound() >= vertex -> second.upperscope() - std::numeric_limits<float>::epsilon()) { break; }
             bool update = load_children(vertex -> second, message.features, id);
 
-            // if (!update) { break; } // XXX Please check if this check still applies 
-
             bool is_root = vertex -> second.capture_set().count() == vertex -> second.capture_set().size();
             if (is_root) { // Update the optimizer state
                 global_update = update_root(vertex -> second.lowerbound(),  vertex -> second.upperbound());

@@ -26,6 +26,7 @@ typedef boost::dynamic_bitset< unsigned long long > dynamic_bitset;
 // @note: Many of the binary operations assume that operands have the same length
 class Bitmask {
 public:
+    // TODO what is a range
     static const bitblock ranges_per_code; // Number of ranges that can be encoded using a single codeblock
     static const bitblock bits_per_range; // Number of bits in a single rangeblock
     static const bitblock bits_per_block; // Number of bits in a single bitblock

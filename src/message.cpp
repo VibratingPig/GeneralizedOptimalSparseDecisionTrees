@@ -112,21 +112,12 @@ bool Message::operator==(Message const & other) const {
         case Message::exploration_message: {
             return this -> sender_tile == other.sender_tile
                 && this -> recipient_capture == other.recipient_capture;
-                // && this -> features == other.features
-                // && this -> signs == other.signs
-                // && this -> scope == other.scope;
-            break;
         }
         case Message::exploitation_message: {
-            // return this -> features == other.features
-            //     && this -> recipient_tile == other.recipient_tile;
-
             return this -> recipient_tile == other.recipient_tile;
-            break;
         }
         default: {
             return false;
-            break;
         }
     }
 }

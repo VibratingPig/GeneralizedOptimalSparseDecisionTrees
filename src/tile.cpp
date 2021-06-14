@@ -10,6 +10,11 @@ Tile::Tile(void) {};
 Tile::~Tile(void) {};
 
 Tile & Tile::operator=(Tile const & other) {
+    //TODO Tiles are equivalent if the content and width are the same
+    // looks like dynamic programming
+    // content? bitmaskquit
+
+    // width? - int
     this -> _content = other._content;
     this -> _width = other._width;
     return * this;
@@ -31,6 +36,7 @@ size_t Tile::hash(void) const {
 
 unsigned int Tile::size(void) const { return this -> _content.size(); }
 
+// when is this called?
 void Tile::resize(unsigned int new_size) { this -> _content.resize(new_size); }
 
 Bitmask & Tile::content(void) { return this -> _content; }
@@ -43,12 +49,6 @@ std::string Tile::to_string(void) const {
     if (this -> _content.size() == 0) { return "Empty"; }
 
     std::stringstream stream;
-    // for (unsigned int i = 0; i < this -> _content.size(); ++i) {
-    //     stream << (int)(this -> _content.get(i));
-    //     if (((i + 1) % this -> _width) == 0 && i < this -> _content.size() - 1) {
-    //         stream << std::endl;
-    //     }
-    // }
     stream << this -> _width;
     stream << " : ";
     stream << this -> _content.to_string();

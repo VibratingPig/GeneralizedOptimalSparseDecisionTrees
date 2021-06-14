@@ -9,34 +9,47 @@ Task::Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned in
     float const regularization = Configuration::regularization;
     bool terminal = (this -> _capture_set.count() <= 1) || (this -> _feature_set.empty());
 
-    float potential, min_loss, max_loss;
+    float max_cost_reduction, min_loss, max_loss;
     unsigned int target_index;
     // Careful, the following method modifies capture_set
-    State::dataset.summary(this -> _capture_set, this -> _information, potential, min_loss, max_loss, target_index, id);
+    State::dataset.summary(this -> _capture_set, this -> _information, max_cost_reduction, min_loss, max_loss, target_index, id);
+
+    std::cout << "Somehow we have this loss function " << max_loss << std::endl;
+    std::cout << "Also have a regularization term " << regularization << std::endl;
 
     this -> _base_objective = max_loss + regularization;
     // Add lambda because we know this has at least 2 leaves
     float const lowerbound = std::min(this -> _base_objective, min_loss + 2 * regularization);
     float const upperbound = this -> _base_objective;
 
+    std::cout << "Lower bound calculated as min_loss + 2 * regularisation " << lowerbound << std::endl;
+
     if ( (1.0 - min_loss < regularization ) // Insufficient maximum accuracy
-        || ( potential < 2 * regularization && (1.0 - max_loss) < regularization) ) // Leaf Support + Incremental Accuracy
+        || (max_cost_reduction < 2 * regularization && (1.0 - max_loss) < regularization) ) // Leaf Support + Incremental Accuracy
     { // Insufficient support and leaf accuracy
         // Node is provably not part of any optimal tree
+//        PG So if a calculated loss is less than supplied regularisation, say 0.02 then to ignore this as that degree
+//        of accuracy is not required.
         this -> _lowerbound = this -> _base_objective;
         this -> _upperbound = this -> _base_objective;
         this -> _feature_set.clear();
+        std::cout << "Insufficient Max. Accuracy " << _lowerbound << " " << _upperbound << std::endl;
+
     } else if (
+//            PG Gap between the losses is less than the accuracy we want.
         max_loss - min_loss < regularization // Accuracy
-        || potential < 2 * regularization // Leaf Support
+        || max_cost_reduction < 2 * regularization // Leaf Support
         || terminal
     ) {
+        std::cout << "Found node that is not part of any optimal tree " << std::endl;
         // Node is provably not an internal node of any optimal tree
         this -> _lowerbound = this -> _base_objective;
         this -> _upperbound = this -> _base_objective;
         this -> _feature_set.clear();
         
     } else {
+//        PG Sufficiently different upper and lower bounds on costs at this point so proceed.
+        std::cout << "Either a node or leaf " << lowerbound << " " << upperbound << std::endl;
         // Node can be either an internal node or leaf
         this -> _lowerbound = lowerbound;
         this -> _upperbound = upperbound;
@@ -188,10 +201,15 @@ void Task::feature_exchange(unsigned int id) {
 }
 
 void Task::send_explorers(float new_scope, unsigned int id) {
+    std::cout<< "Sending explorers with scope " << new_scope << " for id " << id << std::endl;
+    std::cout << "Uncertainty " << this -> uncertainty() << std::endl;
+
     if (this -> uncertainty() == 0) { return; }
     this -> scope(new_scope);
-
     float exploration_boundary = upperbound();
+    std::cout << "Exploration boundary " << exploration_boundary << std::endl;
+    std::cout << "Look ahead " << Configuration::look_ahead << std::endl;
+
     if (Configuration::look_ahead) { exploration_boundary = std::min(exploration_boundary, this -> _upperscope); }
 
     Bitmask const & features = this -> _feature_set;

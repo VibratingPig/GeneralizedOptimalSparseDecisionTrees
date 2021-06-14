@@ -33,18 +33,6 @@ public:
     }
 };
 
-// class GraphTranslationHashComparator {
-// public:
-//     static size_t hash(std::pair<key_type, key_type> const & key) {
-//         size_t seed = key.first.hash();
-//         seed ^= key.second.hash() + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-//         return seed;
-//     }
-//     static bool equal(std::pair<key_type, key_type> const & left, std::pair<key_type, key_type> const & right) {
-//         return left == right;
-//     }
-// };
-
 class GraphChildHashComparator {
 public:
     static size_t hash(std::pair<key_type, int> const & key) {
@@ -98,9 +86,6 @@ typedef adjacency_table::accessor adjacency_accessor;
 typedef adjacency_set::const_iterator const_adjacency_iterator;
 typedef adjacency_set::iterator adjacency_iterator;
 
-// typedef adjacency_set::const_indicator const_adjacency_indicator;
-// typedef adjacency_set::indicator adjacency_indicator;
-
 typedef bound_table::const_accessor const_bound_accessor;
 typedef bound_table::accessor bound_accessor;
 
@@ -108,7 +93,7 @@ typedef bound_list::const_iterator const_bound_iterator;
 typedef bound_list::iterator bound_iterator;
 
 // Container for storing the dependency graph
-// The vertices of his graph act as a memoization table of subproblems
+// The vertices of this graph act as a memoization table of subproblems
 // Entries in the table are not necessarily complete, some are still running, paused, or cancelled.
 class Graph {
 public:
@@ -120,26 +105,6 @@ public:
 
     Graph(void);
     ~Graph(void);
-
-    // bool exists(key_type const & key) const;
-    
-    // bool insert(key_type const & key, value_type const & value);
-    // bool insert(std::pair< key_type, value_type > const & pair);
-    // bool connect(key_type const & parent, key_type const & child, float scope);
-
-    // bool find(const_vertex_accessor & accessor, key_type const & key) const;
-    // bool find(vertex_accessor & accessor, key_type const & key) const;
-
-    // bool find(const_adjacency_accessor & accessor, key_type const & key, bool forward = true) const;
-    // bool find(adjacency_accessor & accessor, key_type const & key, bool forward = true) const;
-
-    // bool find_or_create(const_vertex_accessor & accessor, key_type const & key,
-    // Bitmask & buffer_1, Bitmask & buffer_2, Bitmask & buffer_3,
-    // Task const & task, unsigned int index, bool condition);
-
-    // bool find_or_create(vertex_accessor & accessor, key_type const & key,
-    // Bitmask & buffer_1, Bitmask & buffer_2, Bitmask & buffer_3,
-    // Task const & task, unsigned int index, bool condition);
 
     bool erase(key_type const & key, bool disconnect = true);
     bool disconnect(key_type const & arent, key_type const & child);

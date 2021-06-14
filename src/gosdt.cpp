@@ -33,6 +33,7 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     if(Configuration::verbose) { std::cout << "Using configuration: " << Configuration::to_string(2) << std::endl; }
 
     if(Configuration::verbose) { std::cout << "Initializing Optimization Framework" << std::endl; }
+//    This appears to be the core code.
     Optimizer optimizer;
     optimizer.load(data_source);
 
@@ -41,14 +42,18 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     GOSDT::iterations = 0;
     GOSDT::status = 0;
 
+//    TODO Get rid of threading - complexity that will be dealt with CUDA
     std::vector< std::thread > workers;
     std::vector< int > iterations(Configuration::worker_limit);
 
     if(Configuration::verbose) { std::cout << "Starting Optimization" << std::endl; }
     auto start = std::chrono::high_resolution_clock::now();
 
+//    TODO what does this do?
     optimizer.initialize();
     for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
+//        Some kind of work spawn going on here
+//        std::ref? pointer/wrapper of some kind?
         workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
         #ifndef __APPLE__
         if (Configuration::worker_limit > 1) {

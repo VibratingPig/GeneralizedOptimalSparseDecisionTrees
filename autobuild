@@ -47,7 +47,7 @@ elif [ "$1" = "--configure" ]; then
         ./$0 --clean
     fi
 elif [ "$1" = "--reconfigure" ]; then
-    ./$0 --generate
+    echo ./$0 --generate
     echo "Executing Dependency Tests"
     ./configure $2
     ./$0 --clean

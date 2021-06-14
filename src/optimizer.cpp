@@ -23,6 +23,8 @@ void Optimizer::load(std::istream & data_source) { State::initialize(data_source
 void Optimizer::reset(void) { State::reset(); }
 
 void Optimizer::initialize(void) {
+    std::cout << "Initializing the optimizer" << std::endl;
+
     // Initialize Profile Output
     if (Configuration::profile != "") {
         std::ofstream profile_output(Configuration::profile);
@@ -38,6 +40,9 @@ void Optimizer::initialize(void) {
     int const m = State::dataset.width();
 
     // Enqueue for exploration
+
+    std::cout<< "Sending out the initial exploration message on blank tile. with height " << n << " with width " << m << std::endl;
+
     State::locals[0].outbound_message.exploration(Tile(), Bitmask(n, true), Bitmask(m, true), 0, std::numeric_limits<float>::max());
     State::queue.push(State::locals[0].outbound_message);
     return;
@@ -74,10 +79,14 @@ unsigned int Optimizer::size(void) const {
 }
 
 bool Optimizer::iterate(unsigned int id) {
+//    Where the thread comes in to do some work
+//      TODO where does the id come from
     bool update = false;
+//    Queue maintains the stack of outstanding work in terms of messages
     if (State::queue.pop(State::locals[id].inbound_message)) {
         update = dispatch(State::locals[id].inbound_message, id);
         switch (State::locals[id].inbound_message.code) {
+//            TODO what is the difference between exploration and exploitation?
             case Message::exploration_message: { this -> explore += 1; break; }
             case Message::exploitation_message: { this -> exploit += 1; break; }
         }

@@ -7,6 +7,7 @@
 #include "bitmask.hpp"
 
 // Container for tiles which represent an equivalence class of data sets
+// TODO what is a tile
 class Tile {
 public:
     // @param content: A bitmask containing the bits of a binary matrix in linearized format

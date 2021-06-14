@@ -11,7 +11,8 @@ Encoder::Encoder(std::istream & input) {
 
     // reindex has been disabled since it interferes with the binary search of the new ordinal feature bound
     // reindex(tokens); // Determine an efficient ordering of encoding rules
-
+//    TODO tokens represent just the delimited set of data from the file
+//      example 5.1 3.5 1.4 0.2 iris-setosa
     encode(tokens, this -> binary_rows); // Encode the tokenized data using the encoding rules
 }
 
@@ -204,7 +205,7 @@ void Encoder::limit_precision(std::vector< std::set< std::string > > & values) c
 // Initialize the codex with a set of encoding rules to convert between the original feature space to a binary feature space
 // The codex takes on the following structure is a vector of rule lists, one for each original feature:
 //   codex =  < rule_list >
-// Each rule list is a vector of encoding rules, one for each binary faeture extracted from the value set
+// Each rule list is a vector of encoding rules, one for each binary feature extracted from the value set
 //   rule_list = < source index, encoding_rule >
 // Each source index is the index of the feature in the original feature space before conversion to binary feature space
 // Each encoding rule is a vector of strings, providing the data type, the relational operator, and a reference value:

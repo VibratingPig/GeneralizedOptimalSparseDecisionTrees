@@ -87,6 +87,8 @@ void Dataset::construct_cost_matrix(void) {
             }
         }
     } else { // Default cost matrix
+        std::cout << "Constructing default cost matrix which will be 0 for i==j but 1/height elsewhere depth:"
+        << depth() << " height: " << height() <<  std::endl;
         for (unsigned int i = 0; i < depth(); ++i) {
             for (unsigned int j = 0; j < depth(); ++j) {
                 if (i == j) { this -> costs[i][j] = 0.0; continue; }
@@ -157,21 +159,27 @@ void Dataset::parse_cost_matrix(std::istream & input_stream) {
 };
 
 void Dataset::aggregate_cost_matrix(void) {
+    std::cout << "Calculating the aggregate cost matrix" << std::endl;
     this -> match_costs.resize(depth(), 0.0);
     this -> mismatch_costs.resize(depth(), std::numeric_limits<float>::max());
     this -> max_costs.resize(depth(), -std::numeric_limits<float>::max());
     this -> min_costs.resize(depth(), std::numeric_limits<float>::max());
     this -> diff_costs.resize(depth(), std::numeric_limits<float>::max());
+    std::cout << "Max cost is calculated based on depth alone - so we basically are maxing each row of costs[i][j]" << std::endl;
+
     for (unsigned int j = 0; j < depth(); ++j) {
         for (unsigned int i = 0; i < depth(); ++i) {
             this -> max_costs[j] = std::max(this -> max_costs[j], this -> costs[i][j]);
             this -> min_costs[j] = std::min(this -> min_costs[j], this -> costs[i][j]);
+            std::cout << " Max Costs " << j << " " << this->max_costs[j] << " min " << this->min_costs[j] << std::endl;
             if (i == j) { this -> match_costs[j] = this -> costs[i][j]; continue; }
             this -> mismatch_costs[j] = std::min(this -> mismatch_costs[j], this -> costs[i][j]);
+            std::cout << "Look up the cost of mismatch costs " << std::endl;
         }
     }
     for (unsigned int j = 0; j < depth(); ++j) {
         this -> diff_costs[j] = this -> max_costs[j] - this -> min_costs[j] ;
+        std::cout<<"Calculating the diff costs for the depth " << j << " as " << this -> diff_costs[j] << std::endl;
     }
 }
 
@@ -262,14 +270,23 @@ void Dataset::subset(unsigned int feature_index, Bitmask & negative, Bitmask & p
     this -> features[feature_index].bit_and(positive, false);
 }
 
-void Dataset::summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const {
+void Dataset::summary(Bitmask const & capture_set, float & info, float & max_cost_reduction_other, float & min_loss_other, float & max_loss, unsigned int & target_index, unsigned int id) const {
     Bitmask & buffer = State::locals[id].columns[0];
     unsigned int * distribution; // The frequencies of each class
     distribution = (unsigned int *) alloca(sizeof(unsigned int) * depth());
+    std::cout<< "Starting iterate through the depth of the tree " << std::endl;
+//    std::cout << "Capture set is " << capture_set << std::endl;
+
+//    for (int j = depth(); --j >= 0;){
+//        std::cout << " Target @ " << j << " is " << targets.at(j) << std::endl;
+//    }
+
     for (int j = depth(); --j >= 0;) {
+        std::cout << "Considering depth " << j << std::endl;
         buffer = capture_set; // Set representing the captured points
         this -> targets.at(j).bit_and(buffer); // Captured points with label j
         distribution[j] = buffer.count(); // Calculate frequency
+        std::cout << "Distribution @ " << j << " distribution value " << distribution[j] << std::endl;
     }
 
     float min_cost = std::numeric_limits<float>::max();
@@ -278,38 +295,45 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
     for (int i = depth(); --i >= 0;) { // Prediction index
         float cost = 0.0; // accumulator for the cost of making this prediction
         for (int j = depth(); --j >= 0;) { // Class index
+            std::cout << "cost += costs at " << i << " " << j << " * distribution @ " << j << std::endl;
             cost += this -> costs.at(i).at(j) * distribution[j]; // cost of prediction-class combination
         }
+        std::cout << "Calculating cost as " << cost << std::endl;
+
         if (cost < min_cost) { // track the prediction that minimizes cost
+            std::cout << "Calculating min cost as " << cost << std::endl;
             min_cost = cost;
             cost_minimizer = i;
         }
     }
     float max_cost_reduction = 0.0;
-    float equivalent_point_loss = 0.0;
+    float min_loss = 0.0;
     float support = (float)(capture_set.count()) / (float)(height());
     float information = 0.0;
 
     for (int j = depth(); --j >= 0;) { // Class index
         // maximum cost difference across predictions
         max_cost_reduction += this -> diff_costs[j] * distribution[j];
+        std::cout << "For depth " << j << " max cost reduction is diff cost for this layer * distribution for this layer " << max_cost_reduction << std::endl;
 
         buffer = capture_set; // Set representing the captured points
         this -> majority.bit_and(buffer, false); // Captured majority points
         this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
-        equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
+        min_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
+        std::cout << "Capturing majority points and the match cost associated with them " << min_loss << std::endl;
 
         buffer = capture_set; // Set representing the captured points
         this -> majority.bit_and(buffer, true); // Captured minority points
         this -> targets.at(j).bit_and(buffer); // Captured minority points with label j
-        equivalent_point_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
+        min_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
+        std::cout << "equivalent point loss on mismatch " << min_loss << std::endl;
 
         float prob = distribution[j];
         if (prob > 0) { information += support * prob * (log(prob) - log(support)); }
     }
 
-    potential = max_cost_reduction;
-    min_loss = equivalent_point_loss;
+    max_cost_reduction_other = max_cost_reduction;
+    min_loss_other = min_loss;
     max_loss = min_cost;
     info = information;
     target_index = cost_minimizer;
